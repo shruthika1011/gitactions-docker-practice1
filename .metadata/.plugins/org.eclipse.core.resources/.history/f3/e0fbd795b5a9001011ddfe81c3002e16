@@ -1,0 +1,5 @@
+package com.donation.controller;
+
+public class DonationController {
+
+}

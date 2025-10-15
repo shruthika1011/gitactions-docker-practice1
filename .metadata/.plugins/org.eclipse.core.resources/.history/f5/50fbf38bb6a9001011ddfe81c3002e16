@@ -1,0 +1,5 @@
+package com.donation.model;
+
+public class Donation {
+
+}
