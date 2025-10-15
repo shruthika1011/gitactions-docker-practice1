@@ -1,12 +1,57 @@
 import React, { useEffect, useState } from "react";
-import { getAllDonations, createDonation, updateDonation, deleteDonation } from "../services/donationService";
 
+
+// =======================
+// Donation Service (inside same file)
+// =======================
+import BASE_URL from "../config"; 
+
+async function handleResponse(res) {
+  if (res.status === 204) return null; // DELETE returns 204
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `HTTP error ${res.status}`);
+  }
+  return res.json();
+}
+
+async function getAllDonations() {
+  const res = await fetch(BASE_URL);
+  return handleResponse(res);
+}
+
+async function createDonation(donation) {
+  const res = await fetch(BASE_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(donation),
+  });
+  return handleResponse(res);
+}
+
+async function updateDonation(id, donation) {
+  const res = await fetch(`${BASE_URL}/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(donation),
+  });
+  return handleResponse(res);
+}
+
+async function deleteDonation(id) {
+  const res = await fetch(`${BASE_URL}/${id}`, { method: "DELETE" });
+  if (res.status === 204) return true; // treat 204 as success
+  return handleResponse(res);
+}
+
+// =======================
+// DonationManager Component
+// =======================
 export default function DonationManager() {
   const [donations, setDonations] = useState([]);
   const [form, setForm] = useState({ category: "", item: "", quantity: 1, donor: "" });
   const [editingId, setEditingId] = useState(null);
 
-  // Fetch donations on component mount
   useEffect(() => {
     fetchDonations();
   }, []);
@@ -17,40 +62,59 @@ export default function DonationManager() {
       setDonations(data);
     } catch (err) {
       console.error("Error fetching donations:", err);
+      alert("Failed to fetch donations!");
     }
   };
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: name === "quantity" ? parseInt(value) : value });
+  };
 
   const handleAddOrUpdate = async (e) => {
     e.preventDefault();
-    if (!form.category || !form.item || !form.donor) return;
+    if (!form.category || !form.item || !form.donor) {
+      alert("Please fill all required fields!");
+      return;
+    }
 
     try {
       if (editingId) {
         await updateDonation(editingId, form);
+        alert("Donation updated successfully!");
         setEditingId(null);
       } else {
         await createDonation(form);
+        alert("Donation added successfully!");
       }
       setForm({ category: "", item: "", quantity: 1, donor: "" });
-      fetchDonations(); // Refresh table
+      fetchDonations();
     } catch (err) {
       console.error("Error saving donation:", err);
+      if (editingId) alert("Failed to update donation!");
+      else alert("Failed to add donation!");
     }
   };
 
   const handleEdit = (donation) => {
-    setForm(donation);
+    setForm({ ...donation });
     setEditingId(donation.id);
   };
 
   const handleDelete = async (id) => {
+    if (!id) {
+      alert("Invalid donation ID.");
+      return;
+    }
+    if (!window.confirm("Are you sure you want to delete this donation?")) return;
+
     try {
       await deleteDonation(id);
-      fetchDonations(); // Refresh table
+      alert("Donation deleted successfully!");
+      fetchDonations();
     } catch (err) {
       console.error("Error deleting donation:", err);
+      alert("Failed to delete donation!");
     }
   };
 
@@ -68,9 +132,28 @@ export default function DonationManager() {
           <option value="Others">Others</option>
         </select>
 
-        <input name="item" placeholder="Item name" value={form.item} onChange={handleChange} required />
-        <input name="quantity" type="number" min="1" value={form.quantity} onChange={handleChange} required />
-        <input name="donor" placeholder="Donor name or organization" value={form.donor} onChange={handleChange} required />
+        <input
+          name="item"
+          placeholder="Item name"
+          value={form.item}
+          onChange={handleChange}
+          required
+        />
+        <input
+          name="quantity"
+          type="number"
+          min="1"
+          value={form.quantity}
+          onChange={handleChange}
+          required
+        />
+        <input
+          name="donor"
+          placeholder="Donor name or organization"
+          value={form.donor}
+          onChange={handleChange}
+          required
+        />
 
         <button type="submit" className="btn primary">
           {editingId ? "Update" : "Add"}
@@ -78,7 +161,9 @@ export default function DonationManager() {
       </form>
 
       {donations.length === 0 ? (
-        <p style={{ textAlign: "center", fontSize: "18px", color: "#555", marginTop: "30px" }}>No donations made</p>
+        <p style={{ textAlign: "center", fontSize: "18px", color: "#555", marginTop: "30px" }}>
+          No donations made
+        </p>
       ) : (
         <table className="donation-table">
           <thead>
@@ -98,8 +183,12 @@ export default function DonationManager() {
                 <td>{donation.quantity}</td>
                 <td>{donation.donor}</td>
                 <td className="actions">
-                  <button className="btn primary" onClick={() => handleEdit(donation)}>Edit</button>
-                  <button className="btn danger" onClick={() => handleDelete(donation.id)}>Delete</button>
+                  <button className="btn primary" onClick={() => handleEdit(donation)}>
+                    Edit
+                  </button>
+                  <button className="btn danger" onClick={() => handleDelete(donation.id)}>
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))}
