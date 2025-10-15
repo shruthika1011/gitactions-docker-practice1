@@ -1,4 +1,6 @@
 
-const BASE_URL = "http://localhost:8080/api/donations";
+const config = {
+  url: "http://localhost:8080/api/donations" 
+};
 
-export default BASE_URL;
+export default config;

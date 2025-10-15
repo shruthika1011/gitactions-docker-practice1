@@ -1,2 +1,3 @@
-2025/10/15-16:15:44.765 314c Creating DB D:\Donation-Inventory\.metadata\.plugins\org.eclipse.swt\EBWebView\Default\shared_proto_db since it was missing.
-2025/10/15-16:15:44.771 314c Reusing MANIFEST D:\Donation-Inventory\.metadata\.plugins\org.eclipse.swt\EBWebView\Default\shared_proto_db/MANIFEST-000001
+2025/10/15-18:23:19.431 1e10 Reusing MANIFEST D:\Donation-Inventory\.metadata\.plugins\org.eclipse.swt\EBWebView\Default\shared_proto_db/MANIFEST-000001
+2025/10/15-18:23:19.432 1e10 Recovering log #3
+2025/10/15-18:23:19.433 1e10 Reusing old log D:\Donation-Inventory\.metadata\.plugins\org.eclipse.swt\EBWebView\Default\shared_proto_db/000003.log 

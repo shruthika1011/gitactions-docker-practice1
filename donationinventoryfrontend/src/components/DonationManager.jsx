@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from "react";
-
+import config from "../config"; // import config.js
 
 // =======================
 // Donation Service (inside same file)
 // =======================
-import BASE_URL from "../config"; 
-
 async function handleResponse(res) {
   if (res.status === 204) return null; // DELETE returns 204
   if (!res.ok) {
@@ -16,12 +14,12 @@ async function handleResponse(res) {
 }
 
 async function getAllDonations() {
-  const res = await fetch(BASE_URL);
+  const res = await fetch(config.url);
   return handleResponse(res);
 }
 
 async function createDonation(donation) {
-  const res = await fetch(BASE_URL, {
+  const res = await fetch(config.url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(donation),
@@ -30,7 +28,7 @@ async function createDonation(donation) {
 }
 
 async function updateDonation(id, donation) {
-  const res = await fetch(`${BASE_URL}/${id}`, {
+  const res = await fetch(`${config.url}/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(donation),
@@ -39,9 +37,13 @@ async function updateDonation(id, donation) {
 }
 
 async function deleteDonation(id) {
-  const res = await fetch(`${BASE_URL}/${id}`, { method: "DELETE" });
-  if (res.status === 204) return true; // treat 204 as success
-  return handleResponse(res);
+  const res = await fetch(`${config.url}/${id}`, { method: "DELETE" });
+  if (res.status === 204) return true;
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `HTTP error ${res.status}`);
+  }
+  return true;
 }
 
 // =======================
@@ -94,6 +96,16 @@ export default function DonationManager() {
       if (editingId) alert("Failed to update donation!");
       else alert("Failed to add donation!");
     }
+  };
+
+  const handleCancel = () => {
+    if (editingId) {
+      alert("Update canceled");
+      setEditingId(null);
+    } else {
+      alert("Add canceled");
+    }
+    setForm({ category: "", item: "", quantity: 1, donor: "" });
   };
 
   const handleEdit = (donation) => {
@@ -155,9 +167,14 @@ export default function DonationManager() {
           required
         />
 
-        <button type="submit" className="btn primary">
-          {editingId ? "Update" : "Add"}
-        </button>
+        <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+          <button type="submit" className="btn primary">
+            {editingId ? "Update" : "Add"}
+          </button>
+          <button type="button" className="btn secondary" onClick={handleCancel}>
+            Cancel
+          </button>
+        </div>
       </form>
 
       {donations.length === 0 ? (
